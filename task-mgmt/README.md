@@ -23,7 +23,7 @@ A simple **Task Management System** built with Go and Gin. This microservice pro
 
 ## 🔧 Installation & Running
 
-### **1️⃣ Clone the repository**
+### **1️⃣ Clone and Run**
 ```sh
 git clone https://github.com/pvnptl/task-service.git
 cd task-service
