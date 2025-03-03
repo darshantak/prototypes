@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 	"sync"
-	"taskapp/models"
-	"taskapp/storage"
-	"taskapp/utils"
+	"task-service/models"
+	"task-service/storage"
+	"task-service/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

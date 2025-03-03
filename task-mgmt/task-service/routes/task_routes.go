@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"taskapp/handlers"
+	"task-service/handlers"
 
 	"github.com/gin-gonic/gin"
 )

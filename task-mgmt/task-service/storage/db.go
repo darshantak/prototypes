@@ -2,7 +2,7 @@ package storage
 
 import (
 	"sync"
-	"taskapp/models"
+	"task-service/models"
 )
 
 var (
@@ -39,4 +39,3 @@ func DeleteTask(id string) {
 	defer mu.Unlock()
 	delete(TaskDB, id)
 }
-

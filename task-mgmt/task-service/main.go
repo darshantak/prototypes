@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"taskapp/models"
-	"taskapp/routes"
-	"taskapp/storage"
+	"task-service/models"
+	"task-service/routes"
+	"task-service/storage"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -38,5 +38,5 @@ func main() {
 	routes.RegisterTaskRoutes(r)
 
 	// Start server
-	r.Run(":7777") // Run on port 8080
+	r.Run(":8081") // Run on port 8080
 }
