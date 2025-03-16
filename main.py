@@ -1,9 +1,17 @@
-import hashlib
+import hashlib,bisect
+
 class StorageNode:
     def __init__(self, name, host):
         self.name = name
         self.host = host
-    
+    def add_node(self, node:StorageNode):
+        if len(self._keys) == total_slots:
+            raise Exception("Hash space is full")
+        
+        key = hash_fn(node.host)
+        
+        idx = bisect(self._keys, key)
+        
 storage_nodes = [
     StorageNode(name='A', host='10.131.213.12'),
     StorageNode(name='B', host='10.131.217.11'),
@@ -13,12 +21,13 @@ storage_nodes = [
 ]
 
 
-def hash_fn(key):
+def hash_fn(key,total_slots):
     hsh = hashlib.sha256() 
     hsh.update(bytes(key.encode('utf-8')))
     
-    print(hsh.hexdigest())
-    return sum(bytearray(key.encode('utf-8')))%7
+    return int(hsh.hexdigest(),16) % total_slots
+    
+    # return sum(bytearray(key.encode('utf-8')))%7
 
 def upload(path):
     index = hash_fn(path)
