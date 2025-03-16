@@ -6,8 +6,16 @@ from moviepy.video.fx import all as vfx
 from moviepy.editor import VideoFileClip, AudioFileClip
 
 def trim_video(video_path, max_duration=5):
-    """Load video and trim it to `max_duration` seconds."""
+    """Load video, correct rotation, and trim it to `max_duration` seconds."""
     clip = VideoFileClip(video_path)
+    
+    # Auto-correct orientation if necessary
+    if hasattr(clip, 'rotation'):
+        if clip.rotation == 90:
+            clip = clip.rotate(-90)
+        elif clip.rotation == 270:
+            clip = clip.rotate(90)
+    
     return clip.subclip(0, min(max_duration, clip.duration))  # Trim safely
 
 def detect_beats(audio_path, hop_length=512):
@@ -32,6 +40,10 @@ def apply_filter(clip, filter_type="normal"):
     }
     return filters.get(filter_type, lambda c: c)(clip)
 
+def resize_clip(clip, target_height):
+    """Resize the video while maintaining the aspect ratio based on height."""
+    return clip.resize(height=target_height)
+
 def create_reel(video_paths, audio_path, output_path, filter_type="normal", total_duration=15):
     """Create a reel from the given videos and audio."""
 
@@ -49,8 +61,13 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", tota
 
     print(f"Total clips: {num_clips}, Each clip duration: {segment_duration:.2f}s")
 
-    # Apply filters and trim each clip to its allocated segment
-    filtered_clips = [apply_filter(clip.subclip(0, segment_duration), filter_type) for clip in clips]
+    # Resize clips while maintaining aspect ratio
+    target_height = min([clip.h for clip in clips])  # Set the smallest height to maintain consistency
+
+    filtered_clips = [
+        apply_filter(resize_clip(clip.subclip(0, segment_duration), target_height), filter_type)
+        for clip in clips
+    ]
 
     # Merge the clips sequentially
     final_video = mp.concatenate_videoclips(filtered_clips, method="compose")
@@ -74,7 +91,7 @@ def main():
     video_paths = [os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.mov', '.avi'))]
     audio_path = "music.mp3"
     output_path = "output_reel.mp4"
-    create_reel(video_paths, audio_path, output_path, filter_type="normal", total_duration=15)
+    create_reel(video_paths, audio_path, output_path, filter_type="cool", total_duration=15)
 
 if __name__ == "__main__":
     main()
