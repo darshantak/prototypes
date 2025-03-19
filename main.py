@@ -5,7 +5,7 @@ import moviepy.editor as mp
 from moviepy.video.fx import all as vfx
 from moviepy.editor import VideoFileClip, AudioFileClip
 
-def trim_video(video_path, duration=3):
+def trim_video(video_path, duration=4):
     """Load video, correct rotation, and trim it to `duration` seconds from the start."""
     clip = VideoFileClip(video_path)
 
@@ -40,9 +40,10 @@ def apply_filter(clip, filter_type="normal"):
     }
     return filters.get(filter_type, lambda c: c)(clip)
 
-def resize_clip(clip, target_height):
+def resize_clip(clip, target_width=720, target_height=1280):
     """Resize the video while maintaining the aspect ratio based on height."""
-    return clip.resize(height=target_height)
+    # return clip.resize(height=target_height)
+    return clip.resize((target_width, target_height))
 
 def create_reel(video_paths, audio_path, output_path, filter_type="normal", total_duration=15):
     """Create a reel from the given videos and sync it with detected beats."""
@@ -65,9 +66,10 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", tota
     print(f"Total clips: {len(clips)}, Using beats for timing.")
 
     # Resize clips while maintaining aspect ratio
-    target_height = min([clip.h for clip in clips])  # Set the smallest height to maintain consistency
+    # target_height = min([clip.h for clip in clips])  # Set the smallest height to maintain consistency
+    target_width, target_height = 720, 1280  # Force resolution
 
-    filtered_clips = [apply_filter(resize_clip(clip, target_height), filter_type) for clip in clips]
+    filtered_clips = [apply_filter(resize_clip(clip, target_width, target_height), filter_type) for clip in clips]
 
     # Merge the clips sequentially
     final_video = mp.concatenate_videoclips(filtered_clips, method="compose")
@@ -80,7 +82,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", tota
     final_video = final_video.subclip(0, min(total_duration, final_video.duration))
     
     # Save output video
-    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac', fps=30)
+    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac',fps=30,bitrate="5000k",preset="slow")
 
     # Close all clips to free memory
     for clip in clips + filtered_clips + [final_video]:
@@ -89,9 +91,9 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", tota
 def main():
     video_folder = "clips/"
     video_paths = [os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.mov', '.avi'))]
-    audio_path = "music2.mp3"
+    audio_path = "music1.mp3"
     output_path = "output_reel.mp4"
-    create_reel(video_paths, audio_path, output_path, filter_type="normal", total_duration=15)
+    create_reel(video_paths, audio_path, output_path, filter_type="normal", total_duration=20)
 
 if __name__ == "__main__":
     main()
