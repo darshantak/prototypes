@@ -22,31 +22,6 @@ def trim_video(video_path, duration=4):
 
     return clip.subclip(0, min(duration, clip.duration))  # Trim safely
 
-def find_best_music_segment(audio_path, target_duration=20):
-    """Find the best segment of the music with high energy and beats."""
-    y, sr = librosa.load(audio_path)
-    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
-
-    audio_duration = librosa.get_duration(y=y, sr=sr)  # Get actual duration
-    frame_hop = int(sr * 0.1)  # 0.1 sec hops
-    num_frames = int(target_duration * sr / frame_hop)
-
-    max_energy = 0
-    best_start_time = 0
-
-    for i in range(len(onset_env) - num_frames):
-        energy = np.sum(onset_env[i : i + num_frames])
-        if energy > max_energy:
-            max_energy = energy
-            best_start_time = i * frame_hop / sr  # Convert to seconds
-
-    # Ensure best_start_time is within the actual audio duration
-    best_start_time = min(best_start_time, max(0, audio_duration - target_duration))
-
-    print(f"Best segment starts at: {best_start_time:.2f}s (Audio Duration: {audio_duration:.2f}s)")
-    return best_start_time
-
-
 def detect_best_music_end(audio_path, target_time):
     """Find the closest beat to the target time to trim the music naturally."""
     try:
@@ -95,12 +70,6 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
     # Get the **total video duration** (sum of all clips)
     total_video_duration = sum(clip.duration for clip in clips)
 
-    # Find the best segment of the music to start from
-    best_start_time = find_best_music_segment(audio_path, min(target_duration, total_video_duration))
-    if best_start_time is None:
-        print("Failed to determine best music segment. Using default start.")
-        best_start_time = 0
-
     # Detect best music end time **based on available video duration**
     best_end_time = detect_best_music_end(audio_path, min(target_duration, total_video_duration))
 
@@ -119,7 +88,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
     final_video = final_video.subclip(0, min(final_video.duration, best_end_time + fade_duration))
 
     try:
-        audio = AudioFileClip(audio_path).subclip(best_start_time, best_start_time + final_video.duration)
+        audio = AudioFileClip(audio_path).subclip(0, final_video.duration)
     except Exception as e:
         print(f"Error processing audio: {e}")
         return
@@ -142,7 +111,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
 def main():
     video_folder = "clips/"
     video_paths = [os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.mov', '.avi'))]
-    audio_path = "music.mp3"
+    audio_path = "tokoyo.mp3"
     output_path = "output_reel.mp4"
     create_reel(video_paths, audio_path, output_path, filter_type="normal", target_duration=20)
 
