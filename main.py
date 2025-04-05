@@ -44,12 +44,33 @@ def detect_best_music_end(audio_path, target_time):
 def apply_filter(clip, filter_type="normal"):
     """Apply a visual filter to the clip."""
     filters = {
-        "normal": lambda c: c,
-        "grayscale": lambda c: c.fx(vfx.blackwhite),
-        "noir": lambda c: c.fx(vfx.blackwhite).fx(vfx.colorx, 1.5),
-        "warm": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.gamma_corr, 0.8),
-        "cool": lambda c: c.fx(vfx.colorx, 0.8).fx(vfx.gamma_corr, 1.2),
+    "normal": lambda c: c,  # No change
+
+    "grayscale": lambda c: c.fx(vfx.blackwhite).fx(vfx.colorx, 1.1),  
+    # Slight contrast boost for richer grayscale
+
+    "noir": lambda c: c.fx(vfx.blackwhite).fx(vfx.colorx, 1.7).fx(vfx.lum_contrast, lum=10, contrast=30),
+    # High contrast with deep shadows for a dramatic noir effect
+
+    "warm": lambda c: c.fx(vfx.colorx, 1.3).fx(vfx.gamma_corr, 0.75).fx(vfx.lum_contrast, lum=5, contrast=15),
+    # Enhanced warmth with depth
+
+    "cool": lambda c: c.fx(vfx.colorx, 0.7).fx(vfx.gamma_corr, 1.3).fx(vfx.lum_contrast, lum=-5, contrast=20),
+    # Cool tones with boosted contrast for a modern cinematic look
+
+    "cinematic": lambda c: c.fx(vfx.lum_contrast, lum=1, contrast=1).fx(vfx.colorx, 1.2),
+    # Deep blacks, high contrast, and slight color boost for a filmic look
+
+    "vintage": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, lum=-15, contrast=25).fx(vfx.gamma_corr, 0.9),
+    # A faded, retro look with softer highlights
+
+    "gloomy": lambda c: c.fx(vfx.blackwhite).fx(vfx.colorx, 0.9).fx(vfx.lum_contrast, lum=-10, contrast=50),
+    # Darker tones with high contrast, giving a moody, intense feel
+
+    "vhs": lambda c: c.fx(vfx.colorx, 0.85).fx(vfx.gamma_corr, 1.2).fx(vfx.lum_contrast, lum=-5, contrast=10).fx(vfx.invert_colors),
+    # Slight color washout, contrast tweaks, and inverted highlights for a 90s VHS effect
     }
+
     return filters.get(filter_type, lambda c: c)(clip)
 
 def resize_clip(clip, target_width=720, target_height=1280):
@@ -60,7 +81,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
     """Create a reel from the given videos and sync it with detected beats."""
 
     # Trim videos to **first 3 seconds** and filter out invalid ones
-    clips = [trim_video(vp, duration=3) for vp in video_paths if os.path.exists(vp)]
+    clips = [trim_video(vp, duration=4) for vp in video_paths if os.path.exists(vp)]
     clips = [clip for clip in clips if clip and clip.duration > 0]  # Remove invalid clips
 
     if not clips:
@@ -78,7 +99,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
     best_end_time = max(0, best_end_time - fade_duration)
 
     # Resize clips while maintaining aspect ratio
-    target_width, target_height = 720, 1280  # Force resolution
+    target_width, target_height = 1280, 720  # Force resolution
     filtered_clips = [apply_filter(resize_clip(clip, target_width, target_height), filter_type) for clip in clips]
 
     # Merge the clips sequentially
@@ -102,7 +123,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
     final_video = final_video.set_audio(audio)
 
     # Save output video
-    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac', fps=30, bitrate="5000k", preset="slow")
+    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac', fps=30, bitrate="8000k", preset="slow")
 
     # Close all clips to free memory
     for clip in clips + filtered_clips + [final_video]:
@@ -111,7 +132,7 @@ def create_reel(video_paths, audio_path, output_path, filter_type="normal", targ
 def main():
     video_folder = "clips/"
     video_paths = [os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.mov', '.avi'))]
-    audio_path = "tokoyo.mp3"
+    audio_path = "music1.mp3"
     output_path = "output_reel.mp4"
     create_reel(video_paths, audio_path, output_path, filter_type="normal", target_duration=20)
 
